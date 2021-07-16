@@ -1,17 +1,24 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'; // import para conectar com redux
-import Movies from './server/Movies'
 import styled, { createGlobalStyle } from "styled-components"
+import Movies from './server/Movies'
+import Series from'./server/Series'
+import Header from './component/Header';
+
 
 // Redux
-import { getMovies } from './modules/movies-module';
+import { getMovies, getSeries } from './modules/movies-module';
 
 const mapStateToProps = (state) => ({ // mapeamento dos estados por props do redux
-  movies: state.movies.movies
+  movies: state.movies.movies,
+  series: state.movies.series,
+  menuoption: state.movies.menuoption,
+  
 });
 
 const mapDispatchToProps = (dispatch) => ({ // mapeamento das ações por props do redux
   getMovies: (info) => dispatch(getMovies(info)),
+  getSeries: (info) => dispatch(getSeries(info)),
 });
 
 const GlobalStyle = createGlobalStyle`
@@ -25,13 +32,14 @@ const Container = styled.div`
   background-color: #37E6A8;
   height: 100%;
   display: flex ;
+  flex-direction: column;
   `
 const BoxCards = styled.div`
   display: flex;
   justify-content: space-around;
   text-align: center;
   flex-wrap: wrap;
-  margin: 0 1rem;
+  margin: 4rem 1rem;
   `
 const ParagrapSinopse = styled.p`
   width:30rem;
@@ -42,7 +50,9 @@ const Teste = styled.div`
   border-radius: 10px;
 `
 const ImgMovies = styled.img`
+
 `
+
 
 class App extends Component {
   state = {
@@ -60,10 +70,9 @@ class App extends Component {
   }
 
   getSeries = async () => {
-    const response = await Movies.get()
-    this.setState({ // enviando para o estado do componente a reposta da api com a lista de filmes
-      series: response.data.results
-    })
+    const response = await Series.get()
+    this.props.getSeries(response.data.results)
+    console.log('Sereis',response)
   }
 
   renderMovies = () => {
@@ -83,20 +92,34 @@ class App extends Component {
     });
   }
 
+  renderSeries = () => {
+    return this.props.series.slice(0, 6).map((serie, index) => {
+      const url = `https://image.tmdb.org/t/p/w500${serie.poster_path}`
+
+      return (
+        <Teste key={index}>
+          <ImgMovies src={url} alt='Poster' />
+          <h1>{serie.name.substr(0, 20)}</h1>
+          <ParagrapSinopse>{serie.overview.substr(0, 200)} ...</ParagrapSinopse>
+          <h3> {serie.vote_average}</h3>
+        </Teste>
+      )
+
+    });
+  }
 
   render() {
     return (
       <Container>
         <GlobalStyle />
+        <Header />
         {this.props.movies.length > 0 && (
           <BoxCards>
-            {/* { this.props.movies.map((movie)=>(
-              <div>
-                <p>{movie.title} - {movie.overview}</p>
-                <h2> {movie.vote_average} </h2>
-              </div>
-            ))} */}
-            {this.renderMovies()}
+            {this.props.menuoption === 'Series' ? 
+             this.renderSeries() 
+            :this.renderMovies()
+            }
+
           </BoxCards>
         )}
       </Container>
